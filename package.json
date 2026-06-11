@@ -1,0 +1,62 @@
+{
+  "name": "one-click-launch",
+  "version": "1.0.0",
+  "description": "A safe, personal one-click workspace launcher for Windows 11.",
+  "main": "dist-electron/main.cjs",
+  "author": "OneClickLaunch",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npm run build:electron && concurrently -k \"vite\" \"npm:electron:dev\"",
+    "electron:dev": "wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .",
+    "build:electron": "esbuild electron/main/index.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist-electron/main.cjs && esbuild electron/preload/index.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist-electron/preload.cjs",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && vite build && npm run build:electron",
+    "preview": "vite preview",
+    "start": "electron .",
+    "dist": "npm run build && electron-builder --win nsis"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^10.0.3",
+    "cross-env": "^7.0.3",
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.2",
+    "esbuild": "^0.28.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.6",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.oneclicklaunch.app",
+    "productName": "OneClickLaunch",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
