@@ -14,6 +14,7 @@ reusable one-click presets.
   Word, Excel, and PowerPoint
 - Launch preview, command disclosure, live status, stop, and failed-action relaunch
 - Ready-made Study, Coding, Gaming, Editing, and Research templates
+- Windows notification-area tray menu with one-click access to every saved preset
 - Local JSON persistence, launch logs, import/export, and data reset
 - Context-isolated Electron IPC with no renderer Node.js access
 
@@ -34,6 +35,10 @@ npm.cmd run dev
 ```
 
 The Vite renderer starts first, followed by the Electron desktop window.
+
+Closing the main window keeps OneClickLaunch running in the Windows notification
+area. Click the tray icon to launch a saved preset, reopen the window, or quit the
+app. Tray launches preserve command disclosure and close-app confirmations.
 
 ## Build
 

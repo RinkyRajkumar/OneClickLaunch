@@ -1,4 +1,4 @@
-import { Download, FolderOpen, RotateCcw, Save, Upload } from "lucide-react";
+import { Download, FolderOpen, RotateCcw, Save, Upload, Workflow } from "lucide-react";
 import { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import { useAppData } from "../services/AppDataContext";
@@ -63,6 +63,21 @@ export default function SettingsPage() {
             <button className="btn-secondary" onClick={() => void window.api.data.export()}><Download size={16} /> Export presets</button>
             <button className="btn-secondary" onClick={() => void importData()}><Upload size={16} /> Import presets</button>
             <button className="btn-danger ml-auto" onClick={() => void reset()}><RotateCcw size={16} /> Reset app data</button>
+          </div>
+        </section>
+
+        <section className="panel p-5">
+          <div className="flex items-start gap-3">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent-500/10 text-accent-400">
+              <Workflow size={19} />
+            </div>
+            <div>
+              <h2 className="font-semibold">System tray</h2>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-500">
+                OneClickLaunch stays available in the Windows notification area when you close the main window.
+                Click its tray icon to launch any saved preset, reopen the dashboard, or quit the app.
+              </p>
+            </div>
           </div>
         </section>
 

@@ -3,6 +3,7 @@ import path from "node:path";
 import type { LaunchAction, LaunchRequest, Preset, Settings } from "../../src/types";
 import { detectApps } from "./appDetection";
 import { startLaunch, stopLaunch } from "./launcher";
+import { createTray, destroyTray, refreshTrayMenu } from "./tray";
 import {
   clearLogs,
   dataPath,
@@ -17,6 +18,17 @@ import {
 } from "./storage";
 
 let mainWindow: BrowserWindow | null = null;
+let isQuitting = false;
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+
+if (!hasSingleInstanceLock) app.quit();
+
+function showMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) createWindow();
+  if (mainWindow?.isMinimized()) mainWindow.restore();
+  mainWindow?.show();
+  mainWindow?.focus();
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -41,26 +53,55 @@ function createWindow() {
   } else {
     void mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
+
+  mainWindow.on("close", (event) => {
+    if (isQuitting) return;
+    event.preventDefault();
+    mainWindow?.hide();
+  });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   createWindow();
+  await createTray(() => mainWindow);
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    showMainWindow();
   });
 });
 
+app.on("second-instance", showMainWindow);
+
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+  // The tray keeps the app available after the main window is hidden.
+});
+
+app.on("before-quit", () => {
+  isQuitting = true;
+  destroyTray();
 });
 
 ipcMain.handle("data:load", () => loadData());
-ipcMain.handle("data:save-preset", (_event, preset: Preset) => savePreset(preset));
-ipcMain.handle("data:delete-preset", (_event, id: string) => deletePreset(id));
+ipcMain.handle("data:save-preset", async (_event, preset: Preset) => {
+  const saved = await savePreset(preset);
+  await refreshTrayMenu();
+  return saved;
+});
+ipcMain.handle("data:delete-preset", async (_event, id: string) => {
+  await deletePreset(id);
+  await refreshTrayMenu();
+});
 ipcMain.handle("data:save-settings", (_event, settings: Settings) => saveSettings(settings));
-ipcMain.handle("data:reset", () => resetData());
+ipcMain.handle("data:reset", async () => {
+  const data = await resetData();
+  await refreshTrayMenu();
+  return data;
+});
 ipcMain.handle("data:export", () => exportData());
-ipcMain.handle("data:import", () => importData());
+ipcMain.handle("data:import", async () => {
+  const data = await importData();
+  if (data) await refreshTrayMenu();
+  return data;
+});
 ipcMain.handle("data:location", () => dataPath());
 ipcMain.handle("logs:list", () => listLogs());
 ipcMain.handle("logs:clear", () => clearLogs());
